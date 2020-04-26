@@ -1,1 +1,1 @@
-# News-virality-analysis
+# News-popularity-analysis
