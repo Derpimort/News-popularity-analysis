@@ -27,5 +27,3 @@ You can also provide pre-downloaded htmls to the preprocess file class ```Articl
  - Using [UMAP](https://umap-learn.readthedocs.io/en/latest/) reduced [InferSent](https://github.com/facebookresearch/InferSent) vectors for titles improved performance about 3-4%. Adding it to the test pipeline was slow, so postponed for now.
  - Use GDELT for trending topics, will improve complexity but with weekly update frequency its feasible
  
- ## References
- > Will update later
