@@ -17,6 +17,14 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 import dateparser
 from attribute_lists import TITLE_L, KEYWORD_L, DESC_L, AUTHOR_L, PUBLISHED_L, CONTENT_L
+from update_headlines import getLDA
+from pandas.core.groupby.groupby import DataError
+
+def check_divide(a,b):
+        if b==0:
+            return 0
+        else:
+            return a/b
 
 class ArticleText:
     vader=SentimentIntensityAnalyzer()
@@ -27,6 +35,8 @@ class ArticleText:
         self.non_stop_w=[]
         self.wordlen=0
         self.title_l=re.findall(r'\w+', title)
+        if self.n_tokens_title()<=1:
+            raise Exception("Invalid title provided, please check constaints")
         
         content_l=re.findall(r'\w+', content)
         self.content_tokens=len(content_l)
@@ -40,6 +50,7 @@ class ArticleText:
         self.sentiment_df=pd.DataFrame(sentiment_l)
         self.title_sentiment=TextBlob(title).sentiment
         self.content_sentiment=TextBlob(content).sentiment
+        
     
     def n_tokens_title(self):
         return len(self.title_l)
@@ -48,16 +59,16 @@ class ArticleText:
         return self.content_tokens
     
     def n_unique_tokens(self):
-        return self.unique_tokens/self.content_tokens
+        return check_divide(self.unique_tokens,self.content_tokens)
     
     def n_non_stop_words(self):
-        return len(self.non_stop_w)/self.content_tokens
+        return check_divide(len(self.non_stop_w),self.content_tokens)
     
     def n_non_stop_unique_tokens(self):
-        return len(np.unique(self.non_stop_w))/len(self.non_stop_w)
+        return check_divide(len(np.unique(self.non_stop_w)),len(self.non_stop_w))
     
     def average_token_length(self):
-        return self.wordlen/self.content_tokens
+        return check_divide(self.wordlen,self.content_tokens)
     
     def global_subjectivity(self):
         return self.content_sentiment.subjectivity
@@ -66,58 +77,59 @@ class ArticleText:
         return self.content_sentiment.polarity
     
     def global_rate_positive_words(self):
-        return self.sentiment_df['pos'].sum()/self.content_tokens
+        return check_divide(self.sentiment_df['pos'].sum(),self.content_tokens)
     
     def global_rate_negative_words(self):
-        return self.sentiment_df['neg'].sum()/self.content_tokens
+        return check_divide(self.sentiment_df['neg'].sum(),self.content_tokens)
     
     def rate_positive_words(self):
-        return self.sentiment_df['pos'].sum()/(self.sentiment_df['neu']!=1).sum()
+        return check_divide(self.sentiment_df['pos'].sum(),(self.sentiment_df['neu']!=1).sum())
     
     def rate_negative_words(self):
-        return self.sentiment_df['neg'].sum()/(self.sentiment_df['neu']!=1).sum()
+        return check_divide(self.sentiment_df['neg'].sum(),(self.sentiment_df['neu']!=1).sum())
     
     def avg_positive_polarity(self):
         try:
             return self.sentiment_df[['pos', 'polarity']].groupby('pos').mean().loc[1].item()
         except KeyError:
-            print("No positive words")
+            #print("No positive words")
             return 0
     
     def min_positive_polarity(self):
         try:
             return self.sentiment_df[['pos', 'polarity']].groupby('pos').min().loc[1].item()
         except KeyError:
-            print("No positive words")
+            #print("No positive words")
             return 0
-    
+
     def max_positive_polarity(self):
         try:
             return self.sentiment_df[['pos', 'polarity']].groupby('pos').max().loc[1].item()
         except KeyError:
-            print("No positive words")
+            #print("No positive words")
             return 0
-    
+
     def avg_negative_polarity(self):
         try:
             return self.sentiment_df[['neg', 'polarity']].groupby('neg').mean().loc[1].item()
         except KeyError:
-            print("No negative words")
+            #print("No negative words")
             return 0
     
     def min_negative_polarity(self):
         try:
             return self.sentiment_df[['neg', 'polarity']].groupby('neg').min().loc[1].item()
         except KeyError:
-            print("No negative words")
+            #print("No negative words")
             return 0
     
     def max_negative_polarity(self):
         try:
             return self.sentiment_df[['neg', 'polarity']].groupby('neg').max().loc[1].item()
         except KeyError:
-            print("No negative words")
+            #print("No negative words")
             return 0
+
     
     def title_subjectivity(self):
         return self.title_sentiment.subjectivity
@@ -145,10 +157,14 @@ class Article(ArticleText):
         soup=BeautifulSoup(raw, 'lxml')
         self.url=url
         self.metadata=self.getMeta(soup)
-        content=self.metadata['content'].find("section")
-        if not content:
-            content=self.metadata['content']
-        super().__init__(self.metadata['title'], " ".join(list(content.stripped_strings)))
+        if self.metadata['content']:
+            content=self.metadata['content'].find("section")
+            if not content:
+                content=self.metadata['content']
+            content=" ".join(list(content.stripped_strings))
+        else:
+            raise Exception("No content found for", url, "\nPlease add custom constraints [if any] in attributes_list.py")
+        super().__init__(self.metadata['title'], content)
         
     def iterTillHit(self, soup, arglist, target=None):
         for arg in arglist:
@@ -209,6 +225,11 @@ class Article(ArticleText):
             pass
         finally:
             return dict(weekday_dict)
+    
+    def lda(self):
+        lda_dict=getLDA(self.metadata['title'])[0]
+        lda_dict={"LDA_%.2d"%index:val for index,val in lda_dict}
+        return lda_dict
         
     def stats(self):
         attributes=['num_hrefs', 'num_self_hrefs',
@@ -216,4 +237,5 @@ class Article(ArticleText):
         meta_dict=super().stats()
         meta_dict.update({func:getattr(self, func)() for func in attributes})
         meta_dict.update(self.daystuff())
+        meta_dict.update(self.lda())
         return meta_dict
