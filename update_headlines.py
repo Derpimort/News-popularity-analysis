@@ -17,6 +17,7 @@ from gensim.parsing.preprocessing import STOPWORDS
 from nltk.stem import WordNetLemmatizer
 from gensim.test.utils import datapath
 
+
 MODEL_DIR="./models/"
 lemma = WordNetLemmatizer()
 
@@ -61,8 +62,8 @@ def updateLDA():
     tfidf=TfidfModel(dtm)
     corp_tfidf=tfidf[dtm]
     
-    lda = LdaMulticore(corp_tfidf, num_topics=14, id2word=corp_d, passes=60, workers=3)
-    print(lda.print_topics(num_topics=14, num_words=5))
+    lda = LdaMulticore(corp_tfidf, num_topics=5, id2word=corp_d, passes=60, workers=3)
+    print(lda.print_topics(num_topics=5, num_words=5))
     checkdir(MODEL_DIR)
     corp_d.save(MODEL_DIR+"corpus_dict.model")
     #corp_tfidf.save(MODEL_DIR+"corpus_tfidf.model")
@@ -81,5 +82,7 @@ def getLDA(topics):
     return list(lda[tfidf[dtm]])
 
 if __name__=="__main__":
-    #updateLDA()
-    print({"LDA_%.2d"%i:j for i,j in getLDA(["Prime Minister Ardern says New Zealand has won \"battle\" against community spread of coronavirus - CBS News"])[0]})
+    updateLDA()
+    print(getLDA(["Prime Minister Ardern says New Zealand has won \"battle\" against community spread of coronavirus - CBS News",
+                  "LG Velvet specs revealed: 48-megapixel camera, optional dual screen",
+                  "A big asteroid will fly by Earth Wednesday, but don't panic. It won't hit us"]))

@@ -18,6 +18,7 @@ from bs4 import BeautifulSoup
 import dateparser
 from attribute_lists import TITLE_L, KEYWORD_L, DESC_L, AUTHOR_L, PUBLISHED_L, CONTENT_L
 from update_headlines import getLDA
+from readability.readability import Readability
 from pandas.core.groupby.groupby import DataError
 
 def check_divide(a,b):
@@ -164,6 +165,7 @@ class Article(ArticleText):
             content=" ".join(list(content.stripped_strings))
         else:
             raise Exception("No content found for", url, "\nPlease add custom constraints [if any] in attributes_list.py")
+        self.rd=Readability(content)
         super().__init__(self.metadata['title'], content)
         
     def iterTillHit(self, soup, arglist, target=None):
@@ -230,6 +232,18 @@ class Article(ArticleText):
         lda_dict=getLDA(self.metadata['title'])[0]
         lda_dict={"LDA_%.2d"%index:val for index,val in lda_dict}
         return lda_dict
+    
+    def readability(self):
+        readability_dict={'ARI': self.rd.ARI(), 
+            'FleschReadingEase': self.rd.FleschReadingEase(), 
+            'FleschKincaidGradeLevel': self.rd.FleschKincaidGradeLevel(), 
+            'GunningFogIndex': self.rd.GunningFogIndex(), 
+            'SMOGIndex': self.rd.SMOGIndex(), 
+            'ColemanLiauIndex': self.rd.ColemanLiauIndex(), 
+            'LIX': self.rd.LIX(), 
+            'RIX': self.rd.RIX()}
+        return readability_dict
+        
         
     def stats(self):
         attributes=['num_hrefs', 'num_self_hrefs',
@@ -238,4 +252,5 @@ class Article(ArticleText):
         meta_dict.update({func:getattr(self, func)() for func in attributes})
         meta_dict.update(self.daystuff())
         meta_dict.update(self.lda())
+        meta_dict.update(self.readability())
         return meta_dict
