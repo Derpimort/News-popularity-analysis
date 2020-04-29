@@ -27,3 +27,12 @@ You can also provide pre-downloaded htmls to the preprocess file class ```Articl
  - Using [UMAP](https://umap-learn.readthedocs.io/en/latest/) reduced [InferSent](https://github.com/facebookresearch/InferSent) vectors for titles improved performance about 3-4%. Adding it to the test pipeline was slow, so postponed for now.
  - Use GDELT for trending topics, will improve complexity but with weekly update frequency its feasible
  
+## References
+
+- K. Fernandes, P. Vinagre and P. Cortez. A Proactive Intelligent Decision Support System for Predicting the Popularity of Online News. Proceedings of the 17th EPIA 2015 - Portuguese Conference on Artificial Intelligence, September, Coimbra, Portugal.
+
+- Readability functions from : https://github.com/mmautner/readability
+
+- [This](https://stackoverflow.com/a/48287388/10811476) guy for CSVwriter code.
+
+- [This](https://towardsdatascience.com/topic-modeling-and-latent-dirichlet-allocation-in-python-9bf156893c24) article for LDA.
