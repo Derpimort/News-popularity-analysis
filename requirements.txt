@@ -6,7 +6,7 @@ mysqlclient==1.4.6
 newsapi-python==0.2.6
 nltk==3.5
 numba==0.48.0
-numpy==1.18.1
+numpy==1.22.0
 pandarallel==1.4.8
 pandas==1.0.1
 regex==2020.4.4
