@@ -4,7 +4,7 @@ gensim==3.8.2
 lxml==4.9.1
 mysqlclient==1.4.6
 newsapi-python==0.2.6
-nltk==3.5
+nltk==3.6.6
 numba==0.48.0
 numpy==1.22.0
 pandarallel==1.4.8
